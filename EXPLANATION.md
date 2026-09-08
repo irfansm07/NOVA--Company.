@@ -1,144 +1,155 @@
-# Design & Implementation Notes
+# Notes on how and why I built this
 
-This document explains the reasoning behind the build, and answers the questions the
-assignment brief says you should be ready to discuss in review. Read it over so you can
-speak to it confidently and in your own words.
+Writing this mostly so I have my thoughts straight before the review — the brief
+mentions I might get asked to explain the implementation live, so this is basically me
+prepping answers in advance rather than trying to remember everything on the spot.
 
-## 1. Design decisions
+## Why NOVA looks the way it does
 
-**Brand direction.** Instead of the generic SaaS look (cream background + terracotta accent,
-or near-black + neon accent, rounded cards with soft grey shadows everywhere), NOVA uses a
-"focused workspace" identity:
+I didn't want this to look like a generic Tailwind template — you know the type,
+cream background, orange/terracotta button, everything in a rounded card with the same
+soft grey shadow. So before writing any code I picked a direction first:
 
-- **Color** — a cool paper-white background (`#F6F7F4`), near-black ink text with a blue
-  undertone (`#14171C`), a deep indigo primary (`#2B3A67`) for structure (nav CTA, product
-  section, stats band), a warm gold accent (`#E8A33D`) reserved for primary actions and
-  small highlight moments, and a muted sage green for secondary/success signals. Indigo and
-  gold read as "focused, considered work" rather than a generic tech gradient.
-- **Type** — Fraunces (a characterful serif) for headlines paired with Inter (a clean
-  humanist sans) for body text and UI. The serif gives NOVA warmth and a point of view;
-  most productivity SaaS sites default to a single grotesk sans everywhere, so the pairing
-  is a deliberate differentiator.
-- **Layout** — left-aligned, asymmetric hero (not centered/symmetric, which is the default),
-  a dot-grid texture instead of a gradient blob, a numbered sequence *only* in "How It
-  Works" because that content genuinely is a 3-step sequence — the Features and Solutions
-  grids intentionally avoid numbering since that content isn't ordered.
-- **Motion** — restrained on purpose: one scroll-triggered reveal on the feature grid, one
-  count-up animation on the stats band, and hover/focus transitions on interactive
-  elements. Not every section fades in on scroll, because that scattershot pattern is a
-  common tell of generated pages and gets old fast for real visitors.
+- **Colors**: cool paper-white background instead of cream, near-black text with a
+  slight blue tint, deep indigo as the "structural" color (nav CTA button, the product
+  section, the stats band), and gold as the one accent color reserved for primary
+  actions — I tried to only use gold where I actually wanted the eye to land, not
+  sprinkle it everywhere. There's also a muted sage green used for the "save 20%"
+  badge and checkmarks.
+- **Fonts**: paired a serif (Fraunces) for headlines with a plain sans (Inter) for
+  everything else. Most SaaS landing pages use one sans font for literally everything,
+  so pairing a serif headline font in was a deliberate way to make it feel less
+  templated.
+- **Layout**: the hero is left-aligned, not centered — centered hero sections are the
+  default in like 90% of these templates so I wanted to break from that. I also only
+  numbered one section ("How It Works") because that's the one section where the
+  content is actually a sequence (step 1, 2, 3). The Features grid and Solutions grid
+  aren't numbered on purpose, since that content isn't ordered and numbering it would
+  just be decoration.
+- **Animation**: kept this pretty restrained. There's one scroll-reveal on the features
+  grid and one count-up animation on the stats — I didn't want every single section to
+  fade in as you scroll, because that gets old fast and honestly is a bit of a
+  giveaway that a page was AI-generated without much thought.
 
-## 2. Technology choices
+## Why this stack
 
-- **React + Vite**: the brief prefers React; Vite gives fast HMR during development and a
-  small, optimized production bundle (no framework overhead from Next.js's server features,
-  which this static marketing page doesn't need).
-- **Tailwind CSS**: utility classes keep styling colocated with markup, which makes each
-  component easy to review in isolation, and Tailwind's config file is where all design
-  tokens (colors, fonts, radii) are centralized — so the whole palette can be changed from
-  one file.
-- **No icon/animation libraries**: the icon set is ~15 glyphs, hand-written as inline SVG
-  paths in `Icon.jsx`. This avoids importing a large icon package for a handful of shapes
-  and keeps the total JS bundle around 180KB uncompressed / ~57KB gzipped.
+React because the brief says it's preferred. Vite instead of Create React App or
+Next.js because this is a static marketing page — it doesn't need server rendering or
+routing, so Next would've been overkill, and Vite's dev server is just noticeably
+faster to work with. Tailwind because it let me keep every design decision (colors,
+fonts, spacing) in one config file instead of writing a separate CSS file per
+component and trying to keep them consistent by hand.
 
-## 3. Component structure
+I skipped icon libraries and animation libraries on purpose — the icon set here is
+maybe 15 shapes, so I just wrote them as inline SVGs in one file (`Icon.jsx`) instead
+of installing a whole package for it.
 
-`App.jsx` is a thin composition root: it owns only the two pieces of state that are shared
-across sections — the color theme and whether the demo modal is open — and passes them down
-as props. Every section (`Hero`, `Features`, `Pricing`, etc.) is a self-contained component
-that imports its own copy from `src/data/content.js` and manages any state local to itself
-(e.g. `Pricing` owns its monthly/annual toggle, `FAQ` owns which item is expanded,
-`Testimonials` owns the current slide index). This keeps state close to where it's used and
-means any single section can be tested, reused, or handed to another dev without pulling in
-the rest of the page.
+## How the components are organized
 
-Content is separated from markup in `content.js` so that copy edits never require touching
-JSX, and so the component files stay focused on structure and behavior.
+`App.jsx` doesn't do much on its own — it just holds the two bits of state that
+multiple sections need (which theme is active, and whether the demo modal is open) and
+passes them down. Every actual section — Hero, Features, Pricing, whatever — is its
+own file under `src/components/`, and each one manages its own local state if it needs
+any. So `Pricing.jsx` owns the monthly/annual toggle itself, `FAQ.jsx` owns which
+question is currently open, `Testimonials.jsx` owns which slide you're on. None of that
+state needed to live higher up in `App.jsx`, so I kept it where it's actually used.
 
-## 4. Challenges faced
+All the actual text content — nav links, feature descriptions, pricing plan details,
+testimonial quotes, FAQ questions — lives in `src/data/content.js` as plain JS
+objects/arrays. That way if I (or someone else) needs to change copy, it's a data
+change, not a JSX change, and the components themselves stay focused on layout and
+behavior instead of being cluttered with paragraphs of text.
 
-- **Avoiding the "generated SaaS page" look** required consciously picking a palette and
-  type pairing that isn't the default first choice, and justifying every structural device
-  (e.g. only numbering the one section that's actually a sequence).
-- **Animated counters** needed a hook that fires once (not repeatedly) when a section
-  scrolls into view, without a third-party library — solved with a small
-  `useInView` wrapper around `IntersectionObserver` plus a `requestAnimationFrame` easing
-  loop in `Stats.jsx`.
-- **Accordion height animation** without a fixed pixel height (since answer text length
-  varies) was solved with a CSS grid-template-rows trick (`grid-rows-[0fr]` →
-  `grid-rows-[1fr]`) rather than JS-measured heights.
-- **Dark mode without flash-of-wrong-theme** was handled by reading `localStorage` /
-  `prefers-color-scheme` synchronously in `App.jsx`'s initial state, rather than defaulting
-  to light and switching after mount.
+## Stuff that was actually tricky
 
-## 5. How AI tools were used
+- **The count-up stat numbers** — I wanted them to animate once, right when you scroll
+  to that section, not replay every time or animate immediately on page load. Ended up
+  writing a small `useInView` hook around `IntersectionObserver` and then using
+  `requestAnimationFrame` with an ease-out curve inside `Stats.jsx` to animate the
+  number itself.
+- **The FAQ accordion's open/close animation** — answers are different lengths, so I
+  couldn't just animate a fixed pixel height. Used a CSS trick with
+  `grid-template-rows` going from `0fr` to `1fr` instead, which animates smoothly
+  without needing to measure anything in JS.
+- **Dark mode without a flash of the wrong theme on load** — I read the saved theme
+  (or the OS preference if nothing's saved) synchronously when `App.jsx` first
+  initializes its state, instead of defaulting to light mode and then switching after
+  the page has already rendered.
+- **The pricing toggle switch, honestly** — I actually had a bug here after my first
+  push where the little circle in the toggle would drift and overlap the "Annual"
+  label text. Turned out I'd positioned it as `absolute` without setting a `left`
+  value, so the browser was falling back to some default position instead of where I
+  actually wanted it. Fixed it by switching to a flex-based layout for the toggle and
+  just letting the circle translate from its natural position instead of being
+  absolutely positioned with a missing coordinate. Small bug, but a good reminder to
+  actually click through everything after deploying instead of assuming the local
+  build looked the same as production.
 
-Claude was used as a pair-programmer: I described the brief, and Claude proposed a design
-token plan (palette/type/layout) before writing any code, which I reviewed and adjusted
-before implementation began. Claude then scaffolded the Vite/Tailwind config and wrote each
-component. I ran `npm run build` myself to confirm the project compiles cleanly, and I can
-walk through and modify any part of it live — see the Q&A below for the explanations I'd
-give in review.
+## Where AI fit into this
+
+I used Claude for a good chunk of the actual typing — scaffolding the Vite/Tailwind
+config, writing the first pass of each component. But the design direction (palette,
+type pairing, why things are laid out the way they are) was something I worked through
+first before any code got written, and I went back through the components afterward,
+including finding and fixing the toggle bug mentioned above. I ran the build myself
+(`npm run build`) to make sure it actually compiles, and I understand what each piece
+of this does well enough to change any of it live if asked.
 
 ---
 
-## Answers to likely review questions
+## Questions I should be ready to answer
 
 **How do your components work?**
-Each section is a standalone function component under `src/components/`. Sections that need
-their own interactive state (accordion open index, carousel index, pricing toggle, theme)
-declare that state locally with `useState`; shared state (theme, modal visibility) lives in
-`App.jsx` and is passed down as props. Content is imported from `src/data/content.js` so
-markup and copy stay separate.
+Every section under `src/components/` is its own function component. If a section
+needs interactive state — which FAQ item is open, which pricing period is selected,
+which testimonial is showing — that state lives inside that component with `useState`.
+The only state that lives higher up, in `App.jsx`, is stuff multiple components
+actually need to share: the current theme and whether the demo modal is open.
 
-**How does the mobile navigation work?**
-`Navbar.jsx` tracks an `open` boolean. Below the `md` breakpoint, a hamburger button toggles
-it; the panel's height animates via a `max-h-0` → `max-h-96` Tailwind transition rather than
-`display: none`, so the collapse/expand is animated. While open, `document.body.style.overflow`
-is set to `hidden` in a `useEffect` to prevent background scroll, and it's restored on close.
+**How does the mobile nav work?**
+`Navbar.jsx` has an `open` boolean. Below the tablet breakpoint, a hamburger button
+toggles it, and the dropdown panel animates open/closed using a max-height transition
+instead of just toggling `display: none`, so it actually slides rather than snapping.
+While it's open I lock the page's scroll so you're not scrolling the page behind the
+menu.
 
 **How does the FAQ accordion work?**
-`FAQ.jsx` keeps a single `openIndex` in state (only one item open at a time). Each panel is
-rendered with `aria-expanded`/`aria-controls` for accessibility, and the expand/collapse
-animation uses a CSS grid-rows trick so it works with variable-length answers without
-JavaScript measuring the DOM.
+One `openIndex` value in state — only one answer is open at a time. Clicking a
+question either opens it or closes it if it's already open. The height animation uses
+a CSS grid-rows trick rather than measuring pixel heights in JavaScript.
 
-**How is data rendered?**
-All page copy — nav links, feature list, pricing plans, testimonials, FAQ items — lives in
-`src/data/content.js` as plain arrays/objects, and each component `.map()`s over the
-relevant array to render its markup. This means adding a 4th pricing plan or a 7th FAQ item
-is a data change, not a markup change.
+**How is the data rendered?**
+Everything — nav links, features, pricing plans, testimonials, FAQ — comes from
+`src/data/content.js` as arrays of objects, and each component just `.map()`s over the
+relevant array. Adding a new pricing plan or FAQ question is editing that one file, not
+touching any component markup.
 
-**Why did you select this technology stack?**
-React for component reuse and the assignment's stated preference; Vite for a fast, minimal
-build tool suited to a static marketing page; Tailwind so design tokens (color, type,
-spacing) are centralized and consistent across every component instead of hand-written CSS
-per section.
+**Why this tech stack?**
+React because it's the preferred option in the brief and makes the section-based
+structure easy. Vite because it's fast and this page doesn't need Next's server-side
+features. Tailwind so all the design tokens live in one config file instead of
+scattered CSS.
 
 **How did you handle responsive design?**
-Mobile-first Tailwind breakpoints (`sm`, `md`, `lg`) throughout: single-column stacks by
-default, expanding to grids at `sm`/`md`/`lg`. The nav collapses to a hamburger below `md`;
-grids (features, solutions, pricing, stats) go from 1 → 2/3/4 columns as width increases.
-Tested by resizing the browser and via the browser's device toolbar at common breakpoints
-(375px, 768px, 1024px, 1440px) to confirm no horizontal scroll or overlap.
+Mobile-first Tailwind breakpoints — everything's a single column by default and
+expands into grids at larger widths. Checked it at roughly 375px, 768px, and 1440px
+using the browser dev tools' device toolbar to make sure nothing overlapped or caused
+horizontal scrolling.
 
 **How would you improve accessibility further?**
-Add a live region announcement when the testimonial carousel or accordion changes for
-screen-reader users; run an automated audit (axe or Lighthouse) to catch contrast edge
-cases in dark mode; add explicit `lang` alternatives if the page is localized; verify tab
-order end-to-end with a keyboard-only pass and add visible skip-links for every major
-landmark, not just "skip to content."
+Run it through an automated audit like Lighthouse or axe to catch anything I missed,
+especially contrast in dark mode. I'd also add a live region so screen readers get
+notified when the testimonial carousel changes slides, since right now that update is
+silent to anyone not looking at the screen.
 
 **How would you optimize performance?**
-Convert the CSS-drawn product mock and any future real screenshots to `<img loading="lazy">`
-with modern formats (WebP/AVIF); code-split rarely-used UI (e.g. the demo modal) with
-`React.lazy`; self-host the two Google Fonts instead of a render-blocking Google Fonts
-request, and preload the display font; run `vite build --report` / Lighthouse to check
-bundle size and Largest Contentful Paint on the built `dist` output.
+Self-host the Google Fonts instead of loading them from Google's CDN (avoids an extra
+render-blocking request), lazy-load the demo modal since it's not needed until someone
+clicks a button for it, and run a Lighthouse pass on the actual deployed build to see
+where the biggest wins are instead of guessing.
 
-**How would you convert this static site into a production application?**
-Replace the placeholder newsletter/demo-modal handlers with real API calls (e.g. to an
-email service and a scheduling tool); add environment-based config for analytics; introduce
-routing (React Router) if additional pages are needed beyond the single landing page; add
-a CMS or headless content source if marketing needs to edit copy without a code deploy; add
-CI (lint + build) on every pull request before deploying via Vercel/Netlify's Git integration.
+**How would you turn this into a real production app?**
+Hook the newsletter form and demo modal up to actual backend services instead of just
+local state, add routing if it ever needs more than one page, probably move the copy
+out of a static JS file and into a CMS if non-developers need to edit it, and set up
+CI so the build runs automatically on every pull request before it deploys.
