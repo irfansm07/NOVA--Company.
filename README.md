@@ -1,7 +1,8 @@
 # NOVA — AI Productivity Platform Landing Page
 
-A fully responsive, production-quality marketing landing page for **NOVA**, a fictional
-AI productivity platform, built for the Front-End Development Intern assignment.
+This is my submission for the Front-End Development Intern assignment — a fully
+responsive landing page for a fictional company. I went with the suggested brand,
+**NOVA**, an AI productivity platform for teams.
 
 **Tagline:** Build Better. Work Smarter.
 
@@ -9,41 +10,55 @@ AI productivity platform, built for the Front-End Development Intern assignment.
 
 ## Live Demo
 
-> Replace this line with your deployed URL once published (see *Deployment* below).
->
-> `https://nova-landing.vercel.app`
+**https://nova-murex-seven.vercel.app**
 
-## Technologies Used
+## Repo
 
-- **React 18** (function components + hooks)
-- **Vite 5** — dev server and production bundler
-- **Tailwind CSS 3** — utility-first styling with a custom design token theme (`tailwind.config.js`)
-- Zero UI/animation dependencies — icons are hand-authored inline SVG, and all motion is
-  done with Tailwind transitions, CSS keyframes and the native `IntersectionObserver` API
+https://github.com/irfansm07/NOVA--Company.
 
-No component libraries, icon packs, or animation libraries were used, to keep the bundle
-small and to demonstrate the underlying HTML/CSS/JS concepts directly.
+## What I built it with
 
-## Features
+- **React 18** — function components + hooks, no class components
+- **Vite** — for the dev server and the production build
+- **Tailwind CSS** — I set up a custom theme in `tailwind.config.js` (colors, fonts,
+  a couple of custom keyframes) instead of using the default Tailwind palette, so it
+  wouldn't look like every other Tailwind template out there
+- No icon library, no animation library, no UI kit. The icons are hand-written SVGs
+  in `Icon.jsx` and the animations are plain CSS transitions + one small custom hook
+  for scroll-triggered stuff. I didn't want to pull in a 200KB icon pack for 15 shapes.
 
-**Required sections** — Navigation, Hero, Trusted-By strip, Features (6), Product/About,
-How It Works, Statistics, Solutions, Testimonials (4), Pricing (3 plans), FAQ (6 questions),
-Final CTA, Footer.
+I picked React because the brief said it's preferred, and Vite over Create React App
+because it's just faster and it's what most teams actually use now. Tailwind because I
+wanted the whole color/type system centralized in one config file instead of scattered
+across component files.
 
-**Required interactions** — responsive nav, mobile hamburger menu, smooth scrolling, FAQ
-accordion, button/card hover effects, working in-page navigation links.
+## Sections included
 
-**Bonus features implemented:**
-- Dark / light mode with `localStorage` persistence and OS preference detection
-- Animated statistics that count up on scroll into view
-- Scroll-triggered reveal animation on the feature grid
-- Testimonial carousel with dot indicators and prev/next controls
-- Monthly / annual pricing toggle
-- Demo modal (video/booking placeholder) opened from two CTAs
-- Newsletter email validation with inline error/success states
-- Back-to-top button that appears after scrolling
+Nav bar, hero, trusted-by logo strip, 6 features, product/about section, how-it-works
+(3 steps), animated stats, solutions/use-cases, testimonials (carousel, 4 quotes),
+pricing (3 plans + monthly/annual toggle), FAQ accordion (6 questions), final CTA with
+a newsletter box, and a footer.
 
-## Project Structure
+## Interactions / things that actually work
+
+- Responsive nav that collapses into a hamburger menu on mobile
+- Smooth scrolling to every section from the nav links
+- FAQ accordion (click a question, it expands, click another, the first one closes)
+- Hover effects on every button and card
+- Dark/light mode toggle — remembers your choice via localStorage, also respects your
+  OS setting on first visit
+- Stats that count up from 0 when you scroll to them
+- Testimonial carousel with arrows + dots
+- Pricing toggle (monthly vs annual, with a "save 20%" badge)
+- A demo modal that pops up from two different CTA buttons
+- Newsletter input that actually validates the email and shows an error/success message
+- Back-to-top button that shows up once you've scrolled down a bit
+
+Basically I tried to cover the required interaction list and then add a few extra ones
+from the bonus list since they weren't too much extra work once the core layout was
+solid.
+
+## Folder structure
 
 ```
 nova-landing/
@@ -53,15 +68,15 @@ nova-landing/
 ├── postcss.config.js
 ├── vite.config.js
 └── src/
-    ├── main.jsx              # React entry point
-    ├── App.jsx                # Composes all sections, owns theme + modal state
-    ├── index.css               # Tailwind directives + base/accessibility styles
+    ├── main.jsx
+    ├── App.jsx              # ties all the sections together, holds theme + modal state
+    ├── index.css
     ├── data/
-    │   └── content.js          # All copy & structured content (single source of truth)
+    │   └── content.js        # all the actual text/copy lives here, not scattered in JSX
     ├── hooks/
-    │   └── useInView.js         # IntersectionObserver hook (stats + scroll reveal)
+    │   └── useInView.js       # small IntersectionObserver hook, used by Stats + Features
     └── components/
-        ├── Icon.jsx             # Inline SVG icon set
+        ├── Icon.jsx
         ├── Navbar.jsx
         ├── Hero.jsx
         ├── TrustedBy.jsx
@@ -79,56 +94,59 @@ nova-landing/
         └── DemoModal.jsx
 ```
 
-## Installation & Local Development
+I split every section into its own component instead of one giant App.jsx file mainly
+because it made it way easier to work on one part without scrolling through 800 lines,
+and it's closer to how a real codebase would be organized.
 
-Requires Node.js 18+.
+## Running it locally
+
+You need Node 18 or newer.
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Start the dev server
 npm run dev
-# → open the printed local URL (typically http://localhost:5173)
+```
 
-# 3. Build for production
+That starts the dev server, usually at `http://localhost:5173`.
+
+To build for production:
+
+```bash
 npm run build
-# → output goes to /dist
+```
 
-# 4. Preview the production build locally
+Output goes into `/dist`. You can check the build locally with:
+
+```bash
 npm run preview
 ```
 
-## Deployment
+## How I deployed it
 
-The app is a static Vite build, so it deploys to any static host. **Vercel** (recommended):
+Pushed the repo to GitHub, then imported it into Vercel (vercel.com/new → import from
+GitHub). Vercel picked up that it's a Vite project automatically — didn't have to touch
+any build settings, just clicked deploy. If you wanted to use Netlify instead, it's the
+same idea: build command `npm run build`, publish directory `dist`.
 
-1. Push this project to a GitHub repository.
-2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-3. Vercel auto-detects Vite — keep the defaults (`npm run build`, output directory `dist`).
-4. Deploy, then copy the live URL into the *Live Demo* section above and into your submission.
+## AI tools I used
 
-**Netlify** is equally simple: `npm run build`, publish directory `dist`, drag-and-drop the
-`dist` folder onto [app.netlify.com/drop](https://app.netlify.com/drop) for a one-off deploy,
-or connect the GitHub repo for continuous deployment.
+I used Claude (Anthropic) quite a bit for this — mainly to scaffold the Vite/Tailwind
+setup quickly and to write the first draft of each component. I didn't just take what
+it gave me and ship it though — I went through the design choices myself first (the
+color palette, the font pairing, why the hero is left-aligned instead of centered),
+had Claude implement that direction, and then went back and forth fixing things that
+looked off (there's actually a whole toggle-switch positioning bug I had to get fixed
+after I first pushed this — a classic case of "looked fine on my screen, broke on
+review"). I also used it to help draft the placeholder marketing copy since I'm not a
+copywriter and NOVA is a made-up product anyway.
 
-## AI Tools Used
-
-This project was built with assistance from **Claude** (Anthropic), used to:
-- Scaffold the Vite + React + Tailwind project structure
-- Draft component code for each section based on a hand-written design plan (palette,
-  type pairing, layout) so the result wouldn't default to a generic AI-template look
-- Draft placeholder marketing copy for a fictional product
-- Verify the production build compiles cleanly (`npm run build`)
-
-All generated code was reviewed, and adjusted; see `EXPLANATION.md` for the reasoning
-behind the structure, styling and technology decisions, which I can walk through and modify
-live during review.
+I can walk through and explain any part of this code — see `EXPLANATION.md` for more
+detail on the reasoning, and I'm happy to make live changes during review if asked.
 
 ## Screenshots
 
-> Add screenshots here before submitting, e.g.:
->
-> `![Desktop hero](./screenshots/desktop-hero.png)`
-> `![Mobile menu](./screenshots/mobile-menu.png)`
-> `![Pricing section](./screenshots/pricing.png)`
+_(adding these before final submission)_
+
+- Desktop — hero + features
+- Mobile — hamburger menu open
+- Pricing section with the toggle
